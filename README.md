@@ -1,7 +1,7 @@
 # React Native Carrier Info
 
 Note: 
-- This repo is an unmaintained fork with additional functions to fetch SIM carrier identity via Carrier Name + Mobile Carrier Code + Mobile Network COde.
+- This repo is an unmaintained fork with additional functions to fetch SIM carrier identity via Carrier Name + Mobile Carrier Code + Mobile Network Code.
 - Multi-SIM and eSIM behaviour is supported.
 
 Due to security reasons in both OS, the actual SIM ICCID can no longer be fetched after certain API versions. Hence, the getIccid() function differentiates based on OS version.
