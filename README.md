@@ -1,8 +1,24 @@
 # React Native Carrier Info
 
-[![npm version](https://badge.fury.io/js/react-native-carrier-info.svg)](https://badge.fury.io/js/react-native-carrier-info)
-[![npm downloads](https://img.shields.io/npm/dm/react-native-carrier-info.svg?maxAge=2592000)](https://img.shields.io/npm/dm/react-native-carrier-info.svg?maxAge=2592000)
+Note: 
+- This repo is an unmaintained fork with additional functions to fetch SIM carrier identity via Carrier Name + Mobile Carrier Code + Mobile Network COde.
+- Multi-SIM and eSIM behaviour is supported.
 
+Due to security reasons in both OS, the actual SIM ICCID can no longer be fetched after certain API versions. Hence, the getIccid() function differentiates based on OS version.
+
+Currently, the method functions using APIs below:
+```js
+Android Version:
+<= 9 TelephonyManager
+10 SubscriptionManager
+11 Custom ID generation with Carrier Name + MCC + MNC with SubscriptionManager
+(Physical SIM always take primary slot)
+
+iOS Version:
+<= 11 Custom ID generation with Carrier Name + MCC + MNC with subscriberCellularProvider
+>= 12 Custom ID generation with Carrier Name + MCC + MNC with serviceSubscriberCellularProviders
+(eSim seems to always take primary slot based on testing, but this is not confirmed)
+```
 React Native module bridge to obtain information about the user’s home cellular service provider.
 
 Makes use of the following native classes:
