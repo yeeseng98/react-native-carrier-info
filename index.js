@@ -31,5 +31,17 @@ export default class CarrierInfo {
 
 	static async mobileNetworkOperator() {
 		return await _CarrierInfo.mobileNetworkOperator();
+  	}
+
+  	static async getIccid() {
+		return await _CarrierInfo.getIccid();
 	}
+
+	static async getIccidList() {
+		return await _CarrierInfo.getIccidList();
+	}
+
+ 	static async simcardPresent() {
+		return await _CarrierInfo.simcardPresent();
+  	}
 }

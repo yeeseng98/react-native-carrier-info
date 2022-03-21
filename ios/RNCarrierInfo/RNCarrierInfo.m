@@ -90,13 +90,155 @@ RCT_EXPORT_METHOD(mobileNetworkOperator:(RCTPromiseResolveBlock)resolve
     NSString *mcc = [[nInfo subscriberCellularProvider] mobileCountryCode];
     NSString *mnc = [[nInfo subscriberCellularProvider] mobileNetworkCode];
     NSString *operator = [NSString stringWithFormat: @"%@%@", mcc, mnc];
-    if (operator) {
+
+    if ([(NSString *)mcc length] == 0 && [(NSString *)mnc length] == 0) {
+         reject(@"no_network_operator", @"Mobile network operator code cannot be resolved", nil);
+    }else{
         resolve(operator);
-    }
-    else {
-        reject(@"no_network_operator", @"Mobile network operator code cannot be resolved", nil);
+
     }
 }
 
+// return custom UID
+RCT_EXPORT_METHOD(getIccid:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  if (@available(iOS 12.0, *)) {
+    CTTelephonyNetworkInfo *nInfo = [[CTTelephonyNetworkInfo alloc] init];
+
+    // serviceSubscriberCellularProviders dictionary does not have defined order,
+    // hence no guarantee that same info is returned from different app executions.
+    NSDictionary<NSString *, CTCarrier *> *dicCarrier =  [nInfo serviceSubscriberCellularProviders];
+    NSString* result = @"";
+
+    for (id key in dicCarrier) {
+      NSString* carrierName = [[dicCarrier objectForKey:key] carrierName];
+      NSString* countryCode = [[dicCarrier objectForKey:key] mobileCountryCode];
+      NSString* networkCode = [[dicCarrier objectForKey:key] mobileNetworkCode];
+
+      if (!carrierName) {
+        carrierName = @"";
+      } else {
+        carrierName = ([carrierName length] > 14) ? [carrierName substringToIndex:14] : carrierName;
+      }
+
+      if (!countryCode) {
+        countryCode = @"";
+      }
+
+      if (!networkCode) {
+        networkCode = @"";
+      }
+
+      result = [[carrierName stringByAppendingString:countryCode] stringByAppendingString:networkCode];
+
+      // return first non-empty result found in dictionary
+      if ([(NSString *)countryCode length] > 0 && [(NSString *)networkCode length] > 0) {
+          resolve(result);
+          return;
+      }
+    }
+
+    // resolve empty string if nothing found
+    resolve(result);
+  } else {
+    CTTelephonyNetworkInfo *nInfo = [[CTTelephonyNetworkInfo alloc] init];
+    CTCarrier* carrier = [nInfo subscriberCellularProvider];
+
+    NSString* carrierName = [carrier carrierName];
+    NSString* countryCode = [carrier mobileCountryCode];
+    NSString* networkCode = [carrier mobileNetworkCode];
+
+    if (!carrierName) {
+    carrierName = @"";
+    }
+
+    if (!countryCode) {
+    countryCode = @"";
+    }
+
+    if (!networkCode) {
+    networkCode = @"";
+    }
+
+    NSString* result = [[carrierName stringByAppendingString:countryCode] stringByAppendingString:networkCode];
+
+    resolve(result);
+  }
+}
+
+// iOS 12+ only
+// returns string of custom UID(s) with pipe delimiter.
+RCT_EXPORT_METHOD(getIccidList:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSString* simResult = @"";
+  if (@available(iOS 12.0, *)) {
+    CTTelephonyNetworkInfo *nInfo = [[CTTelephonyNetworkInfo alloc] init];
+    NSDictionary<NSString *, CTCarrier *> *dicCarrier =  [nInfo serviceSubscriberCellularProviders];
+
+    for (id key in dicCarrier) {
+      NSString* carrierName = [[dicCarrier objectForKey:key] carrierName];
+      NSString* countryCode = [[dicCarrier objectForKey:key] mobileCountryCode];
+      NSString* networkCode = [[dicCarrier objectForKey:key] mobileNetworkCode];
+
+      if (!carrierName) {
+        carrierName = @"";
+      } else {
+        carrierName = ([carrierName length] > 14) ? [carrierName substringToIndex:14] : carrierName;
+      }
+
+      if (!countryCode) {
+        countryCode = @"";
+      }
+
+      if (!networkCode) {
+        networkCode = @"";
+      }
+
+      NSString* result = [[carrierName stringByAppendingString:countryCode] stringByAppendingString:networkCode];
+      simResult = [[simResult stringByAppendingString:result] stringByAppendingString:@"|"];
+    }
+  }
+  resolve(simResult);
+}
+
+// check simcard availability
+RCT_EXPORT_METHOD(simcardPresent:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  BOOL simcardAvailable = false;
+
+  if (@available(iOS 12.0, *)) {
+    CTTelephonyNetworkInfo *nInfo = [[CTTelephonyNetworkInfo alloc] init];
+    NSDictionary<NSString *, CTCarrier *> *dicCarrier =  [nInfo serviceSubscriberCellularProviders];
+
+    for (id key in dicCarrier) {
+      NSString* mcc = [[dicCarrier objectForKey:key] mobileCountryCode];
+      NSString* mnc = [[dicCarrier objectForKey:key] mobileNetworkCode];
+
+      if ([(NSString *)mcc length] > 0 && [(NSString *)mnc length] > 0) {
+        simcardAvailable = true;
+        resolve([NSNumber numberWithBool:simcardAvailable]);
+        return;
+      }
+    }
+    resolve([NSNumber numberWithBool:simcardAvailable]);
+  } else {
+    CTTelephonyNetworkInfo *nInfo = [[CTTelephonyNetworkInfo alloc] init];
+    NSString *mcc = [[nInfo subscriberCellularProvider] mobileCountryCode];
+    NSString *mnc = [[nInfo subscriberCellularProvider] mobileNetworkCode];
+
+    if ([(NSString *)mcc length] == 0 && [(NSString *)mnc length] == 0) {
+      resolve([NSNumber numberWithBool:simcardAvailable]);
+    }else{
+      simcardAvailable = true;
+      resolve([NSNumber numberWithBool:simcardAvailable]);
+    }
+  }
+}
+
 @end
+
+
 
